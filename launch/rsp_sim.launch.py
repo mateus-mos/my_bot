@@ -5,10 +5,14 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+
 
 
 
@@ -16,10 +20,14 @@ def generate_launch_description():
 
     package_name='my_bot' 
 
+    world_path = PathJoinSubstitution(
+        [FindPackageShare("my_bot"), "worlds", "test.world"]
+    )
+
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true'}.items()
+                )]), launch_arguments={'use_sim_time': 'true',}.items()
     )
 
     # Include the Gazebo launch file, provided by the gazebo_ros package
@@ -43,8 +51,10 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
-        rviz,
         rsp,
-        gazebo,
+        ExecuteProcess( 
+            cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', '-w', world_path], 
+            output='screen'),
         spawn_entity,
+        rviz,
     ])
