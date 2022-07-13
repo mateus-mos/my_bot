@@ -21,8 +21,12 @@ def generate_launch_description():
     package_name='my_bot' 
 
     world_path = PathJoinSubstitution(
-        [FindPackageShare("my_bot"), "worlds", "test.world"]
+        [FindPackageShare(package_name), "worlds", "test.world"]
     )
+
+    rviz_config_path = PathJoinSubstitution(
+        [FindPackageShare(package_name), "rviz", "my_bot.rviz"]
+     )
 
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
@@ -45,7 +49,7 @@ def generate_launch_description():
     rviz = Node(package='rviz2', 
                 executable='rviz2', 
                 name="rviz2", 
-                arguments=['-d', [os.path.join('src', package_name, 'rviz', 'my_bot.rviz')]],
+                arguments=['-d', rviz_config_path],
                 output='screen')
 
 
@@ -53,8 +57,8 @@ def generate_launch_description():
     return LaunchDescription([
         rsp,
         ExecuteProcess( 
-            cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so', '-w', world_path], 
+            cmd=['gazebo', '--verbose',  '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', '-w', world_path], 
             output='screen'),
         spawn_entity,
-        rviz,
+        rviz
     ])
